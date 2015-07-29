@@ -1,11 +1,17 @@
 package my.playground.office;
 
 
+import java.net.URI;
+import java.time.OffsetTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.inject.Inject;
+
 import my.playground.office.endpoints.JsonOffice;
 import my.playground.office.model.Office;
 import my.playground.office.services.Clock;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,15 +24,11 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import javax.inject.Inject;
-import java.time.OffsetTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import static java.util.Arrays.asList;
+import static java.util.Arrays.stream;
 import static org.junit.Assert.*;
 import static org.springframework.http.HttpStatus.CREATED;
+import static org.springframework.http.HttpStatus.OK;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @IntegrationTest("server.port:0") @WebAppConfiguration
@@ -49,17 +51,15 @@ public class OfficeApplicationIntegrationTest {
 
     @After
     public void tearDown() {
-        for (Office office : officesToCleanup) {
-            if (office.getId() != null) {
-                repository.delete(office.getId());
-            }
-        }
+        officesToCleanup.stream().
+                filter(office -> office.getId() != null).
+                forEach(office -> repository.delete(office.getId()));
         officesToCleanup.clear();
     }
 
 
     @Test
-    public void testSave() {
+    public void testSaveAndLoadOffice() {
 
         Office newOffice = new Office();
         newOffice.setCountry("NL");
@@ -67,7 +67,7 @@ public class OfficeApplicationIntegrationTest {
         newOffice.setOpenFrom(OffsetTime.parse("10:00:00+02:00"));
         newOffice.setOpenUntil(OffsetTime.parse("17:30:00+02:00"));
 
-        ResponseEntity<JsonOffice> response = newTemplate().postForEntity(resourceURL("/office/save.json"),
+        ResponseEntity<JsonOffice> response = newTemplate().postForEntity(resourceURL("/api/office/save.json"),
                 JsonOffice.wrap(newOffice, clock), JsonOffice.class);
 
         assertEquals(CREATED, response.getStatusCode());
@@ -76,28 +76,46 @@ public class OfficeApplicationIntegrationTest {
         officesToCleanup.add(savedOffice);
 
         assertNotNull(savedOffice.getId());
+        URI location = response.getHeaders().getLocation();
+        assertNotNull(location);
 
-        assertTrue(response.getHeaders().containsKey("Location"));
+        response = newTemplate().getForEntity(resourceURL(location.getPath()), JsonOffice.class);
 
+        assertEquals(OK, response.getStatusCode());
+
+        Office loadedOffice = response.getBody().unwrap();
+        assertEquals(newOffice, loadedOffice);
     }
 
-    @Test @Ignore
-    public void testGetAllOffices() {
+    @Test
+    public void testLoadAllOffices() {
 
-        Office newOffice = new Office();
-        newOffice.setCountry("NL");
-        newOffice.setCity("Den Haag");
-        newOffice.setOpenFrom(OffsetTime.parse("10:00:00+02:00"));
-        newOffice.setOpenUntil(OffsetTime.parse("17:30:00+02:00"));
+        ResponseEntity<JsonOffice[]> response = newTemplate().getForEntity(resourceURL("/api/office/all.json"), JsonOffice[].class);
 
-        ResponseEntity<List> response = newTemplate().getForEntity(resourceURL("/office/all.json"), List.class);
-
-        List<JsonOffice> offices = response.getBody();
-        List<String> countries = offices.stream().
-                map(office -> office.getCountry()).sorted().collect(Collectors.toList());
+        assertEquals(OK, response.getStatusCode());
+        JsonOffice[] offices = response.getBody();
+        List<String> countries = stream(offices).
+                map(office -> office.getCountry()).
+                sorted().
+                collect(Collectors.toList());
         assertEquals(asList("AU", "BR", "DE"), countries);
+    }
+
+    @Test
+    public void testLoadOfficesOpenNow() {
+
+        ResponseEntity<JsonOffice[]> response = newTemplate().getForEntity(resourceURL("/api/office/openNow.json"), JsonOffice[].class);
+
+        assertEquals(OK, response.getStatusCode());
+        JsonOffice[] offices = response.getBody();
+        List<String> countries = stream(offices).
+                map(office -> office.getCountry()).
+                sorted().
+                collect(Collectors.toList());
+        assertTrue(asList("AU", "BR", "DE").containsAll(countries));
 
     }
+
 
     private TestRestTemplate newTemplate() {
         TestRestTemplate template = new TestRestTemplate();
@@ -106,7 +124,7 @@ public class OfficeApplicationIntegrationTest {
     }
 
     private String resourceURL(String resource) {
-        return "http://localhost:" + serverPort + "/api" + resource;
+        return "http://localhost:" + serverPort + resource;
     }
 
 }

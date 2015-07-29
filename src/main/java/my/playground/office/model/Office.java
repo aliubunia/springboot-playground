@@ -5,6 +5,7 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.time.OffsetTime;
+import java.util.Objects;
 
 import static javax.persistence.GenerationType.SEQUENCE;
 
@@ -69,5 +70,21 @@ public class Office {
 
     public void setOpenUntil(OffsetTime openUntil) {
         this.openUntil = openUntil;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Office office = (Office) o;
+        return Objects.equals(city, office.city) &&
+                Objects.equals(country, office.country) &&
+                Objects.equals(openFrom, office.openFrom) &&
+                Objects.equals(openUntil, office.openUntil);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(city, country, openFrom, openUntil);
     }
 }

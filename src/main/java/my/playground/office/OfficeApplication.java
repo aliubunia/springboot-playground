@@ -11,6 +11,8 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.web.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 
 import javax.ws.rs.ApplicationPath;
@@ -21,11 +23,7 @@ import java.util.Map;
 import static org.glassfish.jersey.internal.InternalProperties.JSON_FEATURE;
 
 @SpringBootApplication
-public class OfficeApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(OfficeApplication.class, args);
-    }
+public class OfficeApplication extends SpringBootServletInitializer {
 
     @Bean
     public ResourceConfig resourceConfig() {
@@ -46,6 +44,15 @@ public class OfficeApplication {
             register(JsonFeature.class);
             register(OfficeEndpoint.class);
         }
+    }
+
+    public static void main(String[] args) {
+        SpringApplication.run(OfficeApplication.class, args);
+    }
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+        return builder.sources(OfficeApplication.class);
     }
 
 }
