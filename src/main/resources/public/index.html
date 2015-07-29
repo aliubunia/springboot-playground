@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <title>Spring Boot Playground</title>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="css/ui.jqgrid.css">
+    <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/jquery.jqGrid.js"></script>
+    <script type="text/javascript" src="js/grid.locale-en.js"></script>
+</head>
+
+<body>
+
+<h3>Our Offices</h3>
+
+<table id="officeTab"></table>
+
+<script type="text/javascript">
+    //<![CDATA[
+    function loadOffices(gridCaption, apiUrl) {
+        $("#officeTab").
+                jqGrid("clearGridData").
+                jqGrid("setCaption", gridCaption + "<span id='officeTab-modeSwitch' style='float:right; padding-right:30pt;'></span>").
+                jqGrid("setGridParam", {
+                    url: apiUrl,
+                    datatype: "json"
+                }).
+                trigger("reloadGrid");
+    }
+    function loadAllOffices() {
+        loadOffices("All Offices", "api/office/all.json");
+        $("#officeTab-modeSwitch").
+                html(">> <a href='#' onclick='javascript:loadOfficesOpenNow();return false;'>Show Only Offices Open Now</a>")
+    };
+    function loadOfficesOpenNow() {
+        loadOffices("Offices Open Now", "api/office/openNow.json");
+        $("#officeTab-modeSwitch").
+                html(">> <a href='#' onclick='javascript:loadAllOffices();return false;'>Show All Offices</a>")
+    };
+
+    $(document).ready(function() {
+        $("#officeTab").jqGrid({
+            postData: "",
+            datatype: "local",
+            loadonce: true,
+            sortable: true,
+            forceFit: true,
+            height: "100%",
+            colModel: [
+                {
+                    label: 'Country',
+                    name: 'country',
+                    width: 100
+                },
+                {
+                    label : 'City',
+                    name: 'city',
+                    width: 300
+                },
+                {
+                    label: 'Open From (UTC)',
+                    name: 'openFromUTC',
+                    width: 150
+                },
+                {
+                    label: 'Open Until (UTC)',
+                    name: 'openUntilUTC',
+                    width: 150
+                }
+            ]
+        });
+        loadOfficesOpenNow();
+    });
+    //]]>
+</script>
+
+</body>
+
+</html>
