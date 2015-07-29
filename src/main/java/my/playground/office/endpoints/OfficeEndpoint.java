@@ -47,7 +47,7 @@ public class OfficeEndpoint {
         if (!office.isPresent()) {
             return Response.status(NOT_FOUND).build();
         }
-        return Response.ok(office.get()).build();
+        return Response.ok(JsonOffice.wrap(office.get(), clock)).build();
     }
 
     @Path("all.json")
