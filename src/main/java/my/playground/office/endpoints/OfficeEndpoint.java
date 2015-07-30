@@ -5,6 +5,7 @@ import my.playground.office.services.Clock;
 import my.playground.office.services.OfficeService;
 import org.springframework.stereotype.Controller;
 
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -25,7 +26,7 @@ public class OfficeEndpoint {
     @Inject
     protected Clock clock;
 
-    @Path("save.json")
+    @Path("save.json") @RolesAllowed("admin")
     @POST @Consumes(APPLICATION_JSON) @Produces(APPLICATION_JSON)
     public Response save(JsonOffice jsonOffice) {
         if (jsonOffice == null) {

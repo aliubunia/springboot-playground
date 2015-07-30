@@ -1,15 +1,7 @@
 package my.playground.office;
 
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.inject.Inject;
-
 import my.playground.office.model.Office;
-import my.playground.office.util.JsonUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
@@ -24,6 +16,13 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
+
+import javax.inject.Inject;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Arrays.asList;
 import static my.playground.office.util.JsonUtils.stream;
@@ -43,7 +42,7 @@ public class OfficeApplicationIntegrationTest {
     @Inject
     CrudRepository<Office, Integer> repository;
 
-    TestRestTemplate template = new TestRestTemplate();
+    TestRestTemplate template = new TestRestTemplate("admin", "admin");
     List<Integer> officesToCleanup = new ArrayList<>();
 
     @After
